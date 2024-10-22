@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'store',
+    'account',
     'rest_framework', 
     'rest_framework_simplejwt',  
     
@@ -88,6 +89,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'account.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

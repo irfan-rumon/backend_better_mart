@@ -24,7 +24,7 @@ class Product(models.Model):
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField(default=1)  # Quantity of the product in the cart
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -46,22 +46,28 @@ class CartViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        # Check if product already in cart
+        # Get product ID and requested quantity from the request
         product_id = request.data.get('product')
+        quantity = int(request.data.get('quantity', 1))  # Default quantity is 1 if not specified
+
+        # Check if the product already exists in the cart for the current user
         existing_item = Cart.objects.filter(
             user=request.user,
             product_id=product_id
         ).first()
 
         if existing_item:
-            # Update quantity instead of creating new item
-            quantity = int(request.data.get('quantity', 1))
+            # If the product is already in the cart, update the quantity
             existing_item.quantity += quantity
             existing_item.save()
-            serializer = self.get_serializer(existing_item)
-            return Response(serializer.data)
 
-        return super().create(request, *args, **kwargs)
+            # Serialize and return the updated cart item
+            serializer = self.get_serializer(existing_item)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # If the product is not in the cart, create a new cart item
+            return super().create(request, *args, **kwargs)
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer

@@ -20,6 +20,14 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at']
+        read_only_fields = ['user', 'product_name', 'total_price']
+
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at']
         read_only_fields = ['user']
 
 class OrderItemSerializer(serializers.ModelSerializer):

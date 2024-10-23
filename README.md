@@ -60,11 +60,10 @@ POST   /api/accounnt/login/        - Login user
 
 ```
 
-### User Management
+### User Profile
 ```
-GET    /api/auth/user/             - Get current user details
-PUT    /api/auth/user/             - Update user details
-PATCH  /api/auth/user/             - Partial update user details
+GET    /api/account/profile/       - Get information a user
+
 ```
 
 ### Categories
@@ -87,11 +86,11 @@ DELETE /api/store/products/{id}/   - Delete product (Admin only)
 
 ### Shopping Cart
 ```
-GET    /api/store/cart/            - List user's cart items
-POST   /api/store/cart/            - Add item to cart
-GET    /api/store/cart/{id}/       - Retrieve cart item details
-PUT    /api/store/cart/{id}/       - Update cart item
-DELETE /api/store/cart/{id}/       - Remove item from cart
+GET    /api/store/carts/            - List  cart items of a user
+POST   /api/store/carts/            - Add item to cart
+GET    /api/store/carts/{id}/       - Retrieve cart item details of a user
+PUT    /api/store/carts/{id}/       - Update cart item
+DELETE /api/store/carts/{id}/       - Remove item from cart
 ```
 
 ### Orders

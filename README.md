@@ -102,36 +102,7 @@ PUT    /api/store/orders/{id}/     - Update order status (Admin only)
 DELETE /api/store/orders/{id}/     - Delete order (Admin only)
 ```
 
-### Order Items
-```
-GET    /api/store/order-items/     - List order items
-GET    /api/store/order-items/{id}/ - Retrieve order item details
-```
 
-## API Usage Examples
-
-### Register a new user
-```bash
-curl -X POST http://localhost:8000/api/auth/register/ \
-    -H "Content-Type: application/json" \
-    -d '{"email":"user@example.com","password":"securepassword"}'
-```
-
-### Create a new product (Admin only)
-```bash
-curl -X POST http://localhost:8000/api/store/products/ \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <your-token>" \
-    -d '{"name":"Product Name","category":1,"price":99.99,"image_link":"http://example.com/image.jpg"}'
-```
-
-### Add item to cart
-```bash
-curl -X POST http://localhost:8000/api/store/cart/ \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer <your-token>" \
-    -d '{"product":1,"quantity":2}'
-```
 
 ## Authentication
 

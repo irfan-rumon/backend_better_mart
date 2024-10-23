@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, Cart, Order, OrderItem
+from .models import Category, Product, Cart, Order  
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,57 +20,37 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at']
-        read_only_fields = ['user', 'product_name', 'total_price']
-
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-
-    class Meta:
-        model = Cart
-        fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at']
         read_only_fields = ['user']
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
-
-    class Meta:
-        model = OrderItem
-        fields = ['id', 'product', 'product_name', 'quantity', 'price']
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
-    
+    product_ids = serializers.ListField(
+        child=serializers.DictField(child=serializers.IntegerField()),
+        write_only=True
+    )
+
     class Meta:
         model = Order
-        fields = ['id', 'user', 'items', 'total_amount', 'status', 'created_at']
-        read_only_fields = ['user']
+        fields = ['id', 'user', 'product_ids', 'total_amount', 'status', 'created_at']
+        read_only_fields = ['user', 'created_at', 'total_amount']  # Make total_amount read-only
 
     def create(self, validated_data):
-        # Get cart items for the user
-        cart_items = Cart.objects.filter(user=validated_data['user'])
-        if not cart_items:
-            raise serializers.ValidationError("Cart is empty")
+        product_ids = validated_data.pop('product_ids', None)
+
+        if not product_ids:
+            raise serializers.ValidationError("No products provided for the order")
 
         # Calculate total amount
-        total_amount = sum(item.total_price for item in cart_items)
-        
-        # Create order
+        total_amount = sum(
+            Product.objects.get(id=product_id['id']).price * product_id['quantity'] 
+            for product_id in product_ids
+        )
+
+        # Create the order with the calculated total_amount
         order = Order.objects.create(
             user=validated_data['user'],
             total_amount=total_amount,
-            status='pending'
+            status='pending',
+            product_ids=product_ids  # Save the product_ids in the JSON field
         )
-
-        # Create order items from cart
-        for cart_item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                product=cart_item.product,
-                quantity=cart_item.quantity,
-                price=cart_item.product.price
-            )
-
-        # Clear the cart
-        cart_items.delete()
 
         return order

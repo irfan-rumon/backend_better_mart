@@ -55,9 +55,9 @@ python manage.py runserver
 
 ### Authentication Endpoints
 ```
-POST   /api/auth/register/         - Register new user
-POST   /api/auth/login/            - Login user
-POST   /api/auth/logout/           - Logout user
+POST   /api/account/register/      - Register new user
+POST   /api/accounnt/login/        - Login user
+
 ```
 
 ### User Management

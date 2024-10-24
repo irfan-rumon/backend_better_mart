@@ -1,8 +1,10 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action 
 from rest_framework.response import Response
 from django.db import transaction
 from rest_framework import status 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from store.tasks import send_bulk_email, send_low_stock_alert, send_order_confirmation
 from .models import Category, Product, Cart, Order
 from .serializers import (
     CategorySerializer, 
@@ -35,6 +37,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         if category is not None:
             queryset = queryset.filter(category=category)
         return queryset
+    
+    @action(detail=True, methods=['post'])
+    def alert_low_stock(self, request, pk=None):
+        """Trigger low stock alert for a product"""
+        send_low_stock_alert.delay(pk)
+        return Response(
+            {"message": "Low stock alert triggered"}, 
+            status=status.HTTP_200_OK
+        )
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
@@ -83,4 +94,29 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        order = serializer.save(user=self.request.user)
+        # Send order confirmation email asynchronously
+        send_order_confirmation.delay(order.id)
+
+
+class EmailViewSet(viewsets.ViewSet):
+    permission_classes = [IsAdminUser]
+
+    def create(self, request):
+        """Send bulk email to all users"""
+        subject = request.data.get('subject')
+        message = request.data.get('message')
+        
+        if not subject or not message:
+            return Response(
+                {"error": "Both subject and message are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Trigger async task
+        send_bulk_email.delay(subject, message)
+        
+        return Response(
+            {"message": "Bulk email sending initiated"}, 
+            status=status.HTTP_202_ACCEPTED
+        )

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Category, Product, Cart, Order  
+from .models import Category, Product, Cart, Order, OrderItem
+from django.db import transaction
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,35 +23,48 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at']
         read_only_fields = ['user']
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity']
+
 class OrderSerializer(serializers.ModelSerializer):
-    product_ids = serializers.ListField(
-        child=serializers.DictField(child=serializers.IntegerField()),
-        write_only=True
-    )
+    items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product_ids', 'total_amount', 'status', 'created_at']
-        read_only_fields = ['user', 'created_at', 'total_amount']  # Make total_amount read-only
+        fields = ['id', 'user', 'items', 'total_amount', 'status', 'created_at']
+        read_only_fields = ['user', 'created_at', 'total_amount']
 
     def create(self, validated_data):
-        product_ids = validated_data.pop('product_ids', None)
+        items_data = validated_data.pop('items')
+        total_amount = 0
 
-        if not product_ids:
-            raise serializers.ValidationError("No products provided for the order")
+        with transaction.atomic():
+            # First create the order
+            order = Order.objects.create(
+                user=validated_data['user'],
+                total_amount=0,
+                status='pending'
+            )
 
-        # Calculate total amount
-        total_amount = sum(
-            Product.objects.get(id=product_id['id']).price * product_id['quantity'] 
-            for product_id in product_ids
-        )
+            # Create order items
+            for item_data in items_data:
+                product = item_data['product']
+                quantity = item_data['quantity']
+                price = product.price
+                
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    price=price
+                )
+                
+                total_amount += price * quantity
 
-        # Create the order with the calculated total_amount
-        order = Order.objects.create(
-            user=validated_data['user'],
-            total_amount=total_amount,
-            status='pending',
-            product_ids=product_ids  # Save the product_ids in the JSON field
-        )
+            # Update order total
+            order.total_amount = total_amount
+            order.save()
 
         return order

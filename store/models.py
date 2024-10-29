@@ -4,7 +4,8 @@ from account.models import User
 class Category(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    image_link = models.URLField(default="https://example.com/default-image.jpg")
+   
     def __str__(self):
         return self.name
 
@@ -18,6 +19,7 @@ class Product(models.Model):
     image_link = models.URLField()
     quantity = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_trending = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

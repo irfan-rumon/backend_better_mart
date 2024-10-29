@@ -5,7 +5,7 @@ from django.db import transaction
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'created_at']
+        fields = ['id', 'name', 'created_at', 'image_link']
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)

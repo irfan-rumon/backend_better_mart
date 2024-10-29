@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db import transaction
 from rest_framework import status 
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.db.models import Q
 from store.tasks import send_bulk_email, send_low_stock_alert, send_order_confirmation
 from .models import Category, Product, Cart, Order
 from .serializers import (
@@ -22,6 +23,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return [IsAdminUser()]
         return []
 
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -33,9 +35,20 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Product.objects.all()
-        category = self.request.query_params.get('category', None)
-        if category is not None:
+        
+        # Retrieve query parameters
+        name = self.request.query_params.get('name')
+        category = self.request.query_params.get('category')
+        is_trending = self.request.query_params.get('is_trending')
+
+        # Apply filters based on query parameters
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        if category:
             queryset = queryset.filter(category=category)
+        if is_trending is not None:
+            queryset = queryset.filter(is_trending=is_trending.lower() in ['true', '1'])
+        
         return queryset
     
     @action(detail=True, methods=['post'])
@@ -46,6 +59,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             {"message": "Low stock alert triggered"}, 
             status=status.HTTP_200_OK
         )
+
 
 class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer

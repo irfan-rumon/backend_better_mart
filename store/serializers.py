@@ -12,7 +12,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'category_name', 'price', 'image_link', 'created_at']
+        fields = ['id', 'name', 'category', 'category_name', 'price', 'image_link', 'created_at', 'is_trending']
 
 class CartSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)

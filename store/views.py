@@ -115,8 +115,6 @@ class CartViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
-
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]

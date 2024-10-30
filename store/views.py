@@ -89,6 +89,34 @@ class CartViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    def list(self, request, *args, **kwargs):
+        product_id = request.query_params.get('product', None)
+        
+        if product_id is not None:
+            # Try to get single cart item for the specific product
+            cart_item = Cart.objects.filter(
+                user=request.user,
+                product_id=product_id
+            ).first()
+            
+            if not cart_item:
+                return Response(
+                    {"detail": "No cart item found for the specified product"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Serialize and return single item
+            serializer = self.get_serializer(cart_item)
+            return Response(serializer.data)
+        
+        # If no product_id, return all cart items as before
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]

@@ -113,6 +113,15 @@ class CartViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+    # Custom delete action for deleting all items
+    @action(detail=False, methods=['delete'])
+    def clear(self, request):
+        deleted_count, _ = self.get_queryset().delete()
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} items from cart"},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -136,7 +145,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         order = serializer.save(user=self.request.user)
         # Send order confirmation email asynchronously
-        send_order_confirmation.delay(order.id)
+        #send_order_confirmation.delay(order.id)
 
 
 class EmailViewSet(viewsets.ViewSet):

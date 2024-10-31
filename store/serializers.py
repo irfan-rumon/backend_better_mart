@@ -17,10 +17,11 @@ class ProductSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    image_link = serializers.CharField(source='product.image_link', read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at']
+        fields = ['id', 'user', 'product', 'product_name', 'quantity', 'total_price', 'created_at', 'image_link']
         read_only_fields = ['user']
 
 class OrderItemSerializer(serializers.ModelSerializer):
